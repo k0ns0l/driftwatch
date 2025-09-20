@@ -110,13 +110,17 @@ release:
     - **Contributors**: {{ len .Contributors }}
     
     ---
+  extra_files:
+    - glob: ./README.md
+    - glob: ./LICENSE
+    - glob: ./CONTRIBUTING.md
 
 brews:
   - name: driftwatch
     repository:
       owner: k0ns0l
       name: homebrew-tap
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/k0ns0l/driftwatch
     description: Monitor API endpoints for drift and changes
     license: MIT
@@ -199,34 +203,7 @@ docker_manifests:
     image_templates:
       - ghcr.io/k0ns0l/driftwatch:latest
 
-# Release validation
-release_notes:
-  mode: replace
-  header: |
-    ## Release Notes
-    
-    This release includes automated security scanning, vulnerability checks, and comprehensive testing.
-    
-    ### Security Information
-    - All dependencies scanned for vulnerabilities
-    - SBOM (Software Bill of Materials) included
-    - Code security analysis performed
-    
-    ### Verification
-    ```bash
-    # Verify checksums
-    sha256sum -c checksums.txt
-    
-    # Verify signature (if GPG signing is enabled)
-    gpg --verify driftwatch_{{ .Version }}_checksums.txt.sig checksums.txt
-    ```
 
 # Announce releases
 announce:
   skip: '{{gt .Patch 0}}'  # Skip patch releases
-  github:
-    enabled: true
-  discord:
-    enabled: false
-  slack:
-    enabled: false
