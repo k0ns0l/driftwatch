@@ -1,0 +1,232 @@
+version: 2
+
+project_name: driftwatch
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser
+    binary: driftwatch
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - CONTRIBUTING.md
+      - docs/**/*
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github-native
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - '^style:'
+      - '^refactor:'
+  groups:
+    - title: 🚀 Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+'
+      order: 0
+    - title: 🐛 Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+'
+      order: 1
+    - title: ⚡ Performance Improvements
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+'
+      order: 2
+    - title: 🔒 Security Updates
+      regexp: '^.*?security(\([[:word:]]+\))??!?:.+'
+      order: 3
+    - title: 📚 Documentation
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+'
+      order: 4
+    - title: 🔧 Maintenance
+      regexp: '^.*?(chore|refactor)(\([[:word:]]+\))??!?:.+'
+      order: 5
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: k0ns0l
+    name: driftwatch
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## DriftWatch {{ .Tag }} ({{ .Date }})
+    
+    Welcome to this new release of DriftWatch!
+    
+    ### 📦 Installation
+    
+    ```bash
+    # Using Go
+    go install github.com/k0ns0l/driftwatch@{{ .Tag }}
+    
+    # Using Homebrew
+    brew install k0ns0l/tap/driftwatch
+    
+    # Using Docker
+    docker pull k0ns0l/driftwatch:{{ .Tag }}
+    ```
+    
+    ### 🔄 Upgrade Guide
+    
+    If you're upgrading from a previous version, please check our [migration guides](https://github.com/k0ns0l/driftwatch/tree/main/docs/migrations) for any breaking changes.
+    
+    ### 📊 Release Statistics
+    
+    - **Commits**: {{ len .Commits }}
+    - **Contributors**: {{ len .Contributors }}
+    
+    ---
+
+brews:
+  - name: driftwatch
+    repository:
+      owner: k0ns0l
+      name: homebrew-tap
+    folder: Formula
+    homepage: https://github.com/k0ns0l/driftwatch
+    description: Monitor API endpoints for drift and changes
+    license: MIT
+    test: |
+      system "#{bin}/driftwatch --version"
+
+nfpms:
+  - file_name_template: '{{ .ConventionalFileName }}'
+    id: packages
+    homepage: https://github.com/k0ns0l/driftwatch
+    description: Monitor API endpoints for drift and changes
+    maintainer: k0ns0l k0ns0l@pm.me
+    license: MIT
+    vendor: k0ns0l
+    bindir: /usr/bin
+    section: utils
+    contents:
+      - src: ./LICENSE
+        dst: /usr/share/doc/driftwatch/copyright
+        file_info:
+          mode: 0644
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+
+publishers:
+  - name: fury.io
+    ids:
+      - packages
+    dir: "{{ dir .ArtifactPath }}"
+    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/{{ .Env.FURY_USER }}/
+
+dockers:
+  - image_templates:
+      - "k0ns0l/driftwatch:{{ .Tag }}"
+      - "k0ns0l/driftwatch:v{{ .Major }}"
+      - "k0ns0l/driftwatch:v{{ .Major }}.{{ .Minor }}"
+      - "k0ns0l/driftwatch:latest"
+      - "ghcr.io/k0ns0l/driftwatch:{{ .Tag }}"
+      - "ghcr.io/k0ns0l/driftwatch:v{{ .Major }}"
+      - "ghcr.io/k0ns0l/driftwatch:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/k0ns0l/driftwatch:latest"
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/k0ns0l/driftwatch"
+      - "--label=org.opencontainers.image.description=Monitor API endpoints for drift and changes"
+      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--platform=linux/amd64"
+
+docker_manifests:
+  - name_template: k0ns0l/driftwatch:{{ .Tag }}
+    image_templates:
+      - k0ns0l/driftwatch:{{ .Tag }}
+  - name_template: k0ns0l/driftwatch:v{{ .Major }}
+    image_templates:
+      - k0ns0l/driftwatch:v{{ .Major }}
+  - name_template: k0ns0l/driftwatch:v{{ .Major }}.{{ .Minor }}
+    image_templates:
+      - k0ns0l/driftwatch:v{{ .Major }}.{{ .Minor }}
+  - name_template: k0ns0l/driftwatch:latest
+    image_templates:
+      - k0ns0l/driftwatch:latest
+  - name_template: ghcr.io/k0ns0l/driftwatch:{{ .Tag }}
+    image_templates:
+      - ghcr.io/k0ns0l/driftwatch:{{ .Tag }}
+  - name_template: ghcr.io/k0ns0l/driftwatch:v{{ .Major }}
+    image_templates:
+      - ghcr.io/k0ns0l/driftwatch:v{{ .Major }}
+  - name_template: ghcr.io/k0ns0l/driftwatch:v{{ .Major }}.{{ .Minor }}
+    image_templates:
+      - ghcr.io/k0ns0l/driftwatch:v{{ .Major }}.{{ .Minor }}
+  - name_template: ghcr.io/k0ns0l/driftwatch:latest
+    image_templates:
+      - ghcr.io/k0ns0l/driftwatch:latest
+
+# Release validation
+release_notes:
+  mode: replace
+  header: |
+    ## Release Notes
+    
+    This release includes automated security scanning, vulnerability checks, and comprehensive testing.
+    
+    ### Security Information
+    - All dependencies scanned for vulnerabilities
+    - SBOM (Software Bill of Materials) included
+    - Code security analysis performed
+    
+    ### Verification
+    ```bash
+    # Verify checksums
+    sha256sum -c checksums.txt
+    
+    # Verify signature (if GPG signing is enabled)
+    gpg --verify driftwatch_{{ .Version }}_checksums.txt.sig checksums.txt
+    ```
+
+# Announce releases
+announce:
+  skip: '{{gt .Patch 0}}'  # Skip patch releases
+  github:
+    enabled: true
+  discord:
+    enabled: false
+  slack:
+    enabled: false

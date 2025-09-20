@@ -1,0 +1,120 @@
+# DriftWatch Configuration with Authentication Examples
+project:
+  name: "API Monitoring with Authentication"
+  description: "Example configuration showing different authentication methods"
+  version: "1.0.0"
+
+global:
+  user_agent: "driftwatch/1.0.0"
+  timeout: 30s
+  retry_count: 3
+  retry_delay: 5s
+
+endpoints:
+  # Bearer Token Authentication
+  - id: "api-with-bearer"
+    url: "https://api.example.com/v1/users"
+    method: GET
+    interval: 5m
+    auth:
+      type: bearer
+      bearer:
+        token: "${API_TOKEN}"  # Environment variable substitution
+    validation:
+      strict_mode: false
+
+  # Basic Authentication
+  - id: "api-with-basic-auth"
+    url: "https://secure.example.com/api/data"
+    method: GET
+    interval: 10m
+    auth:
+      type: basic
+      basic:
+        username: "${API_USERNAME}"
+        password: "${API_PASSWORD}"
+    validation:
+      strict_mode: true
+
+  # API Key Authentication via Custom Header
+  - id: "api-with-key"
+    url: "https://service.example.com/v2/metrics"
+    method: GET
+    interval: 15m
+    auth:
+      type: api_key
+      api_key:
+        header: "X-API-Key"
+        value: "${SERVICE_API_KEY}"
+    validation:
+      strict_mode: false
+
+  # OAuth 2.0 Client Credentials Flow
+  - id: "oauth2-protected-api"
+    url: "https://oauth-api.example.com/v1/protected"
+    method: GET
+    interval: 20m
+    auth:
+      type: oauth2
+      oauth2:
+        token_url: "https://auth.example.com/oauth/token"
+        client_id: "${OAUTH_CLIENT_ID}"
+        client_secret: "${OAUTH_CLIENT_SECRET}"
+        scopes: ["read", "api"]
+        extra_params:
+          audience: "api.example.com"
+    validation:
+      strict_mode: true
+
+  # Mixed: Custom Headers + Authentication
+  - id: "complex-auth-api"
+    url: "https://complex.example.com/api/v1/data"
+    method: POST
+    interval: 30m
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+      X-Client-Version: "1.0.0"
+    auth:
+      type: bearer
+      bearer:
+        token: "${COMPLEX_API_TOKEN}"
+    request_body_file: "./fixtures/request-body.json"
+    validation:
+      strict_mode: false
+      ignore_fields: ["timestamp", "request_id"]
+
+  # No Authentication (existing behavior)
+  - id: "public-api"
+    url: "https://public.example.com/api/status"
+    method: GET
+    interval: 5m
+    validation:
+      strict_mode: false
+
+alerting:
+  enabled: true
+  channels:
+    - type: slack
+      name: "dev-alerts"
+      enabled: true
+      settings:
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#api-monitoring"
+  rules:
+    - name: "critical-auth-failures"
+      severity: ["critical", "high"]
+      endpoints: ["api-with-bearer", "oauth2-protected-api"]
+      channels: ["dev-alerts"]
+
+reporting:
+  retention_days: 30
+  export_format: json
+  include_body: false
+
+retention:
+  monitoring_runs_days: 30
+  drifts_days: 90
+  alerts_days: 30
+  auto_cleanup: true
+  cleanup_interval: 24h

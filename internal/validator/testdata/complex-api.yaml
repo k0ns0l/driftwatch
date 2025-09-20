@@ -1,0 +1,244 @@
+swagger: '2.0'
+info:
+  title: Complex API
+  version: '2.0.0'
+  description: A complex API with nested objects and arrays for testing
+host: api.complex.com
+basePath: /v2
+schemes:
+  - https
+paths:
+  /products:
+    get:
+      summary: Get products with filtering
+      parameters:
+        - name: category
+          in: query
+          type: string
+        - name: limit
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 100
+        - name: offset
+          in: query
+          type: integer
+          minimum: 0
+      responses:
+        '200':
+          description: Products list
+          schema:
+            type: object
+            required:
+              - products
+              - pagination
+            properties:
+              products:
+                type: array
+                items:
+                  $ref: '#/definitions/Product'
+              pagination:
+                $ref: '#/definitions/Pagination'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /products/{id}:
+    get:
+      summary: Get product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Product details
+          schema:
+            $ref: '#/definitions/Product'
+        '404':
+          description: Product not found
+          schema:
+            $ref: '#/definitions/Error'
+    put:
+      summary: Update product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: product
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateProduct'
+      responses:
+        '200':
+          description: Product updated
+          schema:
+            $ref: '#/definitions/Product'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Product not found
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  Product:
+    type: object
+    required:
+      - id
+      - name
+      - price
+      - category
+    properties:
+      id:
+        type: string
+        description: Product ID
+      name:
+        type: string
+        description: Product name
+      description:
+        type: string
+        description: Product description
+      price:
+        type: number
+        format: float
+        minimum: 0
+        description: Product price
+      category:
+        $ref: '#/definitions/Category'
+      tags:
+        type: array
+        items:
+          type: string
+        description: Product tags
+      attributes:
+        type: object
+        additionalProperties:
+          type: string
+        description: Dynamic product attributes
+      inventory:
+        $ref: '#/definitions/Inventory'
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+
+  UpdateProduct:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      price:
+        type: number
+        format: float
+        minimum: 0
+      category:
+        $ref: '#/definitions/Category'
+      tags:
+        type: array
+        items:
+          type: string
+      attributes:
+        type: object
+        additionalProperties:
+          type: string
+
+  Category:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: string
+        description: Parent category ID
+
+  Inventory:
+    type: object
+    required:
+      - quantity
+      - available
+    properties:
+      quantity:
+        type: integer
+        minimum: 0
+      available:
+        type: integer
+        minimum: 0
+      reserved:
+        type: integer
+        minimum: 0
+      warehouse_locations:
+        type: array
+        items:
+          $ref: '#/definitions/WarehouseLocation'
+
+  WarehouseLocation:
+    type: object
+    required:
+      - warehouse_id
+      - quantity
+    properties:
+      warehouse_id:
+        type: string
+      quantity:
+        type: integer
+        minimum: 0
+      aisle:
+        type: string
+      shelf:
+        type: string
+
+  Pagination:
+    type: object
+    required:
+      - total
+      - limit
+      - offset
+    properties:
+      total:
+        type: integer
+        minimum: 0
+      limit:
+        type: integer
+        minimum: 1
+      offset:
+        type: integer
+        minimum: 0
+      has_more:
+        type: boolean
+
+  Error:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          properties:
+            field:
+              type: string
+            error:
+              type: string
+      trace_id:
+        type: string

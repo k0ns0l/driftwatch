@@ -1,0 +1,73 @@
+# golangci-lint configuration for DriftWatch
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - unconvert
+    - unparam
+    - gocyclo
+    - gofumpt
+  disable: []
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  
+  govet:
+    enable-all: true
+    disable:
+      - shadow
+      - fieldalignment
+  
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - unparam
+    
+    - path: example.*\.go
+      linters:
+        - errcheck
+        - unparam
+    
+    - path: ".*\\.pb\\.go"
+      linters:
+        - all
+    
+    - path: cmd/.*_test\.go
+      linters:
+        - typecheck
+    - path: internal/http/.*_test\.go
+      linters:
+        - typecheck
+    - path: internal/monitor/.*_test\.go
+      linters:
+        - typecheck
+  
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
