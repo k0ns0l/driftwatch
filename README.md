@@ -30,16 +30,16 @@
 - CI/CD integration with exit codes
 - Local SQLite storage
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [🚀 Quick Start](#-quick-start)
-- [📦 Installation](#-installation)
-- [⚙️ Configuration](#️-configuration)
-- [💻 Commands](#-commands)
-- [🔄 CI/CD Integration](#-cicd-integration)
-- [📚 Examples](#-examples)
-- [🛠️ Development](#️-development)
-- [🤝 Contributing](#-contributing)
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Commands](#-commands)
+- [CI/CD Integration](#-cicd-integration)
+- [Examples](#-examples)
+- [Development](#️-development)
+- [Contributing](#-contributing)
 
 ## Quick Start
 
