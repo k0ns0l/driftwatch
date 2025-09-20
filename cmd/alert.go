@@ -139,7 +139,9 @@ func initializeAlertManager() (alerting.AlertManager, error) {
 
 	alertManager, err := alerting.NewAlertManager(cfg, storage)
 	if err != nil {
-		storage.Close()
+		if closeErr := storage.Close(); closeErr != nil {
+			return nil, fmt.Errorf("failed to create alert manager: %w (also failed to close storage: %v)", err, closeErr)
+		}
 		return nil, fmt.Errorf("failed to create alert manager: %w", err)
 	}
 
